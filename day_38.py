@@ -1,90 +1,67 @@
-import requests
-from datetime import datetime
-import os
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+import time
 
-# Nutritionix API Credentials
-API_ID = os.environ.get("API_ID")
-API_KEY = os.environ.get("API_KEY")
+SIMILAR_ACCOUNT = "buzzfeedtasty"
+USERNAME = "username"
+PASSWORD = "passwoed"
 
-# Sheety API
-SHEETY_ENDPOINT = os.environ.get("SHEETY_ENDPOINT")
-BEARER_TOKEN = os.environ.get("BEARER_TOKEN")
 
-# User Data
-GENDER = "male"
-WEIGHT_KG = 60
-HEIGHT_CM = 160
-AGE = 17
+class InstaFollower:
 
-# Get Exercise Input
-QUERY = input("Tell me which exercises you did: ")
+    def __init__(self):
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_experimental_option("detach", True)
+        self.driver = webdriver.Chrome(options=chrome_options)
+        self.driver.maximize_window()
 
-# Nutritionix API Headers
-nutritionix_headers = {
-    "x-app-id": API_ID,
-    "x-app-key": API_KEY,
-    "Content-Type": "application/json",
-}
+    def login(self):
+        url = "https://www.instagram.com/accounts/login/"
+        self.driver.get(url)
+        time.sleep(2)
 
-# Nutritionix API Payload
-nutritionix_payload = {
-    "query": QUERY,
-    "weight_kg": WEIGHT_KG,
-    "height_cm": HEIGHT_CM,
-    "age": AGE,
-}
 
-# Call Nutritionix API
-response = requests.post(
-    url="https://trackapi.nutritionix.com/v2/natural/exercise",
-    headers=nutritionix_headers,
-    json=nutritionix_payload)
-if response.status_code != 200:
-  print(
-      f"Error fetching data from Nutritionix API: {response.status_code}, {response.text}"
-  )
-  exit()
+        decline_cookies_xpath = "/html/body/div[6]/div[1]/div/div[2]/div/div/div/div/div[2]/div/button[2]"
+        cookie_warning = self.driver.find_elements(By.XPATH, decline_cookies_xpath)
+        if cookie_warning:
+            cookie_warning[0].click()
 
-data = response.json()
+        username = self.driver.find_element(by=By.NAME, value="username")
+        password = self.driver.find_element(by=By.NAME, value="password")
 
-# Extract Data
-if "exercises" in data and data["exercises"]:
-  exercise = data["exercises"][0]["user_input"]
-  duration = data["exercises"][0]["duration_min"]
-  calories = data["exercises"][0]["nf_calories"]
-else:
-  print("No exercise data found.")
-  exit()
+        username.send_keys(USERNAME)
+        password.send_keys(PASSWORD)
 
-# Current Date and Time
-date = datetime.now()
-current_date = date.strftime("%d/%m/%Y")
-current_time = date.strftime("%H:%M:%S")
+        time.sleep(2.1)
+        password.send_keys(Keys.ENTER)
 
-# Sheety API Payload
-sheety_payload = {
-    "sheet1": {
-        "date": current_date,
-        "time": current_time,
-        "exercise": exercise.title(),
-        "duration": duration,
-        "calories": calories,
-    }
-}
+        time.sleep(10)
+        save_login_prompt = self.driver.find_element(by=By.XPATH, value="//div[contains(text(), 'Not now')]")
+        if save_login_prompt:
+            save_login_prompt.click()
 
-# Sheety API Headers
-sheety_headers = {
-    "Authorization": BEARER_TOKEN,
-}
+    def find_followers(self):
+        self.driver.get("https://www.instagram.com/buzzfeedtasty/")
 
-# Call Sheety API
-response2 = requests.post(url=SHEETY_ENDPOINT,
-                          json=sheety_payload,
-                          headers=sheety_headers)
-if response2.status_code == 200:
-  print("Data successfully added to Google Sheet!")
-else:
-  print(
-      f"Error posting data to Sheety API: {response2.status_code}, {response2.text}"
-  )
+        time.sleep(10)
+        follow = self.driver.find_element(By.XPATH, value="//div[contains(text(), 'Follow')]")
+        follow.click()
 
+        time.sleep(15)
+
+        follow_all = self.driver.find_element(By.XPATH, value="//div[contains(text(), 'Follow')]")
+
+        for i in range(5):
+            follow_all.click()
+
+    def close_browser(self):
+        self.driver.quit()
+
+
+
+if __name__ == "__main__":
+    bot = InstaFollower()
+    bot.login()
+    time.sleep(10)
+    bot.close_browser()
