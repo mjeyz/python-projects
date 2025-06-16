@@ -2,9 +2,11 @@ import requests
 import smtplib
 from datetime import datetime
 
-PASSWORD = "ymyv yjal yrny vvaq"
-GMAIL = "thisismjeyz@gmail.com"
-response = requests.get("http://muslimsalat.com/Layyah.json?key=c2969d2660f970d1cd45e78ead841867")
+PASSWORD = "Your App Password"
+GMAIL = "Your Gmail"
+
+# Get Your API Key at  https://aladhan.com/prayer-times-api
+response = requests.get("http://muslimsalat.com/Layyah.json?key=Your Api Key")
 response.raise_for_status()
 
 data = response.json()
@@ -41,7 +43,7 @@ try:
             connection.login(user=GMAIL, password=PASSWORD)
             connection.sendmail(
                 from_addr=GMAIL,
-                to_addrs="mudasirjamshaid0@gmail.com",
+                to_addrs=GMAIL,
                 msg=f"Subject:Prayer Times\n\nIt's time for prayer.Take a moment to disconnect from the world, and reconnect with the One who created it.")
     elif current_time == dhuhr_time_24:
         print("It's time for Dhuhr prayer.")
